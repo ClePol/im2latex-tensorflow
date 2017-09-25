@@ -7,10 +7,11 @@ import lasagne
 import tflib
 import numpy
 from tensorflow.python.ops import array_ops
+import config
 
-
+"""
 def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.01, alpha=0.01):
-    """
+    
     Wrapper function to perform weight initialization using standard techniques
 
     :parameters:
@@ -21,7 +22,7 @@ def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.0
         std: standard deviation used for normal / uniform initialization
         mean: mean value used for normal / uniform initialization
         alpha: used when gain = 'leakyrelu'
-    """
+    
 
     if gain in ['linear', 'sigmoid', 'tanh']:
         gain = 1.0
@@ -50,7 +51,7 @@ def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.0
         return lasagne.init.Orthogonal(gain=gain).sample(shape)
     else:
         return lasagne.init.GlorotUniform(gain=gain).sample(shape)
-
+"""
 
 def Embedding(name, n_symbols, output_dim, indices):
     """
@@ -63,11 +64,14 @@ def Embedding(name, n_symbols, output_dim, indices):
         output_dim: Embedding dimension
         indices: input symbols tensor
     """
+    
+    #with tf.name_scope(name) as scope:
+    #with tf.variable_scope("embedding")
+    emb = tf.get_variable(name, shape=[n_symbols, output_dim],
+        initializer=tf.contrib.layers.xavier_initializer(uniform=False))
+        #initializer('Normal', [n_symbols, output_dim], std=1.0 / np.sqrt(n_symbols)))
 
-    with tf.name_scope(name) as scope:
-        emb = tflib.param(name, initializer('Normal', [n_symbols, output_dim], std=1.0 / np.sqrt(n_symbols)))
-
-        return tf.nn.embedding_lookup(emb, indices)
+    return tf.nn.embedding_lookup(emb, indices)
 
 
 def Linear(name, inputs, input_dim, output_dim, activation='linear', bias=True, init=None, weightnorm=False, **kwargs):
@@ -116,21 +120,21 @@ def Linear(name, inputs, input_dim, output_dim, activation='linear', bias=True, 
 
         return result
 
-
-def conv2d(name,
-           input,
-           kernel,
-           stride,
-           depth,
-           num_filters,
-           init='GlorotUniform',
-           pad='SAME',
-           bias=True,
-           weightnorm=False,
-           batchnorm=False,
-           is_training=True,
-           **kwargs):
-    """
+"""
+def conv2d(name,    #just use layers.conv2d?
+    input,
+    kernel,
+    stride,
+    depth,
+    num_filters,
+    init='GlorotUniform',
+    pad='SAME',
+    bias=True,
+    weightnorm=False,
+    batchnorm=False,
+    is_training=True,
+    **kwargs):
+    
     Performs 2D convolution on input in NCHW data format
 
     :parameters:
@@ -141,8 +145,11 @@ def conv2d(name,
         num_filters - int; no. of output channels required
         batchnorm - flag that denotes whether batch normalization should be applied
         is_training - flag that denotes batch normalization mode
-    """
-    batchnorm = False
+    
+    filter_values = initializer(init, (kernel, kernel, depth, num_filters), gain='relu', **kwargs)
+    #out = tf.layers.conv2d(input,num_filters,kernel_initializer=filter_values,padding=pad,use_bias=true,)
+    #out = tf.layers.batch_normalization(out, training=is_training)
+    #batchnorm = False
     with tf.name_scope(name) as scope:
         filter_values = initializer(init, (kernel, kernel, depth, num_filters), gain='relu', **kwargs)
         filters = tflib.param(name + '.W', filter_values)
@@ -153,8 +160,15 @@ def conv2d(name,
             with tf.name_scope('weightnorm') as scope:
                 norms = tf.sqrt(tf.reduce_sum(tf.square(filters), reduction_indices=[0, 1, 2]))
                 filters = filters * (target_norms / norms)
+        
+        if config.CPU:
+            import ipdb; ipdb.set_trace()
+            input = tf.transpose(input, [0, 2, 3, 1])
+            #input = tf.transpose(input, [0, 2, 3, 1])
+            out = tf.nn.conv2d(input, filters, strides=[1, 1, stride, stride], padding=pad, data_format='NHWC')
+        else:
 
-        out = tf.nn.conv2d(input, filters, strides=[1, 1, stride, stride], padding=pad, data_format='NCHW')
+            out = tf.nn.conv2d(input, filters, strides=[1, 1, stride, stride], padding=pad, data_format='NCHW')
 
         if bias:
             b = tflib.param(name + '.b', np.zeros(num_filters, dtype=np.float32))
@@ -165,17 +179,17 @@ def conv2d(name,
             out = tf.layers.batch_normalization(out, training=is_training)
 
         return out
-
-
+"""
+"""
 def max_pool(name, l_input, k, s):
-    """
+    
     Max pooling operation with kernel size k and stride s on input with NCHW data format
 
     :parameters:
         l_input: input in NCHW data format
         k: tuple of int, or int ; kernel size
         s: tuple of int, or int ; stride value
-    """
+    
 
     if type(k) == int:
         k1 = k
@@ -189,17 +203,23 @@ def max_pool(name, l_input, k, s):
     else:
         s1 = s[0]
         s2 = s[1]
-    return tf.nn.max_pool(
-        l_input, ksize=[1, 1, k1, k2], strides=[1, 1, s1, s2], padding='SAME', name=name, data_format='NCHW')
-
-
+    if config.CPU:
+        l_input = tf.transpose(l_input, [0, 2, 3, 1])
+        return tf.nn.max_pool(
+            l_input, ksize=[1, 1, k1, k2], strides=[1, 1, s1, s2], padding='SAME', name=name, data_format='NHWC')
+        #CPU does not support NHWC
+    else:
+        return tf.nn.max_pool(
+            l_input, ksize=[1, 1, k1, k2], strides=[1, 1, s1, s2], padding='SAME', name=name, data_format='NCHW')
+"""
+"""
 def norm(name, l_input, lsize=4):
-    """
+    
     Wrapper function to perform local response normalization (ref. Alexnet)
-    """
+    
     return tf.nn.lrn(l_input, lsize, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name=name)
-
-
+"""
+"""
 class GRUCell(tf.nn.rnn_cell.RNNCell):
 
     def __init__(self, name, n_in, n_hid):
@@ -230,21 +250,21 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
         output = (update * candidate) + ((1 - update) * state)
 
         return output, output
-
-
+"""
+"""
 def GRU(name, inputs, n_in, n_hid):
-    """
+    
     Compute recurrent memory states using Gated Recurrent Units
 
     :parameters:
         n_in : int ; Dimensionality of input
         n_hid : int ; Dimensionality of hidden state / memory state
-    """
+    
     h0 = tflib.param(name + '.h0', np.zeros(n_hid, dtype='float32'))
     batch_size = tf.shape(inputs)[0]
     h0 = tf.reshape(tf.tile(h0, tf.stack([batch_size])), tf.stack([batch_size, n_hid]))
     return tf.nn.dynamic_rnn(GRUCell(name, n_in, n_hid), inputs, initial_state=h0, swap_memory=True)[0]
-
+"""
 
 class LSTMCell(tf.nn.rnn_cell.RNNCell):
 

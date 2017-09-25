@@ -36,13 +36,13 @@ def data_iterator(set='train',batch_size = 32):
                 mask[i,:len(form)] = 1
                 Y[i,:len(form)] = form
             yield imgs, Y, mask
-
+"""
 ## Deprecated!! Queue Runners cannot be used as image is of variable size
 class CustomRunner(object):
-    """
+    
     This class manages the the background threads needed to fill
         a queue full of data.
-    """
+    
     def __init__(self,batch_size=32, SEQ_LEN=50):
         self.dataX = tf.placeholder(dtype=tf.float32, shape=[None, 1, 128, 256])
         self.dataY = tf.placeholder(dtype=tf.int32, shape=[None, None])
@@ -63,21 +63,21 @@ class CustomRunner(object):
         self.enqueue_op = self.queue.enqueue_many([self.dataX, self.dataY, self.dataMask])
 
     def get_inputs(self):
-        """
+        
         Return's tensors containing a batch of images and labels
-        """
+        
         images_batch, labels_batch, mask_batch = self.queue.dequeue_many(self.batch_size)
         return images_batch, labels_batch, mask_batch
 
     def thread_main(self, sess):
-        """
+        
         Function run on alternate thread. Basically, keep adding data to the queue.
-        """
+        
         for dataX, dataY, dataMask in data_iterator(self.batch_size,self.SEQ_LEN):
             sess.run(self.enqueue_op, feed_dict={self.dataX:dataX, self.dataY:dataY, self.dataMask:dataMask})
 
     def start_threads(self, sess, n_threads=1):
-        """ Start background threads to feed queue """
+        Start background threads to feed queue 
         threads = []
         for n in range(n_threads):
             t = threading.Thread(target=self.thread_main, args=(sess,))
@@ -85,3 +85,4 @@ class CustomRunner(object):
             t.start()
             threads.append(t)
         return threads
+"""

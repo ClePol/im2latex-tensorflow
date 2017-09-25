@@ -9,6 +9,7 @@ import data_loaders
 import time
 import os
 
+
 BATCH_SIZE = 20
 EMB_DIM = 80
 ENC_DIM = 256
@@ -20,12 +21,13 @@ NB_EPOCHS = 50
 H = 20
 W = 50
 
-# with tf.device("/cpu:0"):
+
+# with tf.device("/cpu:0"):                         deprecated
 #     custom_runner = data_loaders.CustomRunner()
 #     X,seqs,mask,reset = custom_runner.get_inputs()
 #
 # print X,seqs
-X = tf.placeholder(shape=(None, None, None, None), dtype=tf.float32)
+X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32)
 mask = tf.placeholder(shape=(None, None), dtype=tf.int32)
 seqs = tf.placeholder(shape=(None, None), dtype=tf.int32)
 learn_rate = tf.placeholder(tf.float32)
@@ -137,7 +139,7 @@ saver = tf.train.Saver()
 #saver.restore(sess, './weights_best.ckpt')
 ## start the tensorflow QueueRunner's
 # tf.train.start_queue_runners(sess=sess)
-## start our custom queue runner's threads
+## start ou3r custom queue runner's threads
 # custom_runner.start_threads(sess)
 
 losses = []
