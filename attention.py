@@ -27,8 +27,7 @@ W = 50
 #     X,seqs,mask,reset = custom_runner.get_inputs()
 #
 # print X,seqs
-#X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32) #NHWC
-X = tf.placeholder(shape=(None, None, None, 1))
+X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32) #NHWC
 mask = tf.placeholder(shape=(None, None), dtype=tf.int32)
 seqs = tf.placeholder(shape=(None, None), dtype=tf.int32)
 learn_rate = tf.placeholder(tf.float32)
@@ -158,7 +157,9 @@ for i in xrange(i, NB_EPOCHS):
     itr = data_loaders.data_iterator('train', BATCH_SIZE)
     for train_img, train_seq, train_mask in itr:
         #NCHW to NHWC
-        train_img = tf.transpose(train_img,[0,2,3,1])
+        #train_img = tf.transpose(train_img,[0,2,3,1])
+        train_img = np.transpose(train_img,(0,2,3,1))
+
         iter += 1
         start = time.time()
         _, _loss = sess.run(

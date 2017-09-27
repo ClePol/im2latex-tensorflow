@@ -482,7 +482,7 @@ def im2latexAttention(name, embedding, ctx, input_dim, ENC_DIM, DEC_DIM, D, H, W
     cell = tflib.ops.im2latexAttentionCell(name + '.AttentionCell', input_dim, DEC_DIM, H * W, 2 * ENC_DIM, V_t)
     #cell = tf.contrib.rnn.LSTMCell(H * W, 2 * ENC_DIM,state_is_tuple=False)
     seq_len = tf.tile(tf.expand_dims(tf.shape(embedding)[1], 0), [batch_size])
-    import ipdb; ipdb.set_trace()
+    #import ipdb; ipdb.set_trace()
     #embedding
     out = tf.nn.dynamic_rnn(cell, embedding, initial_state=h0_dec, sequence_length=seq_len, swap_memory=True)
 
