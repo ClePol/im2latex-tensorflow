@@ -9,9 +9,10 @@ import numpy
 from tensorflow.python.ops import array_ops
 import config
 
-"""
+
 def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.01, alpha=0.01):
-    
+    """
+    initializer(init, (input_dim, output_dim), gain='sigmoid', **kwargs)
     Wrapper function to perform weight initialization using standard techniques
 
     :parameters:
@@ -22,7 +23,7 @@ def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.0
         std: standard deviation used for normal / uniform initialization
         mean: mean value used for normal / uniform initialization
         alpha: used when gain = 'leakyrelu'
-    
+    """    
 
     if gain in ['linear', 'sigmoid', 'tanh']:
         gain = 1.0
@@ -51,7 +52,7 @@ def initializer(name, shape, val=0, gain='linear', std=0.01, mean=0.0, range=0.0
         return lasagne.init.Orthogonal(gain=gain).sample(shape)
     else:
         return lasagne.init.GlorotUniform(gain=gain).sample(shape)
-"""
+
 
 def Embedding(name, n_symbols, output_dim, indices):
     """
@@ -265,7 +266,7 @@ def GRU(name, inputs, n_in, n_hid):
     h0 = tf.reshape(tf.tile(h0, tf.stack([batch_size])), tf.stack([batch_size, n_hid]))
     return tf.nn.dynamic_rnn(GRUCell(name, n_in, n_hid), inputs, initial_state=h0, swap_memory=True)[0]
 """
-
+"""
 class LSTMCell(tf.nn.rnn_cell.RNNCell):
 
     def __init__(self, name, n_in, n_hid, forget_bias=1.0):
@@ -301,22 +302,23 @@ class LSTMCell(tf.nn.rnn_cell.RNNCell):
 
         return h_t, new_state
 
-
+"""
+"""
 def LSTM(name, inputs, n_in, n_hid, h0):
-    """
+    
     Compute recurrent memory states using Long Short-Term Memory units
 
     :parameters:
         n_in : int ; Dimensionality of input
         n_hid : int ; Dimensionality of hidden state / memory state
-    """
+    
     batch_size = tf.shape(inputs)[0]
     if h0 is None:
         h0 = tflib.param(name + '.init.h0', np.zeros(2 * n_hid, dtype='float32'))
         h0 = tf.reshape(tf.tile(h0_1, tf.stack([batch_size])), tf.stack([batch_size, 2 * n_hid]))
 
     return tf.nn.dynamic_rnn(LSTMCell(name, n_in, n_hid), inputs, initial_state=h0, swap_memory=True)
-
+"""
 
 def BiLSTM(name, inputs, n_in, n_hid, h0_1=None, h0_2=None):
     """
@@ -331,22 +333,24 @@ def BiLSTM(name, inputs, n_in, n_hid, h0_1=None, h0_2=None):
 
     batch_size = tf.shape(inputs)[0]
     if h0_1 is None:
-        # h0_1 = tf.get_variable(
-        #     name + '.init.h0_1', shape=[batch_size, 2 * n_hid], dtype=tf.float32, initializer=tf.zeros_initializer())
-        h0_1 = tflib.param(name + '.init.h0_1', np.zeros(2 * n_hid, dtype='float32'))
+        h0_1 = tf.get_variable(
+             name + '.init.h0_1', shape=[batch_size, 2 * n_hid], dtype=tf.float32, initializer=tf.zeros_initializer())
+        #h0_1 = tflib.param(name + '.init.h0_1', np.zeros(2 * n_hid, dtype='float32'))
         h0_1 = tf.reshape(tf.tile(h0_1, tf.stack([batch_size])), tf.stack([batch_size, 2 * n_hid]))
 
     if h0_2 is None:
-        # h0_1 = tf.get_variable(
-        #     name + '.init.h0_2', shape=[batch_size, 2 * n_hid], dtype=tf.float32, initializer=tf.zeros_initializer())
-        h0_2 = tflib.param(name + '.init.h0_2', np.zeros(2 * n_hid, dtype='float32'))
+        h0_2 = tf.get_variable(
+             name + '.init.h0_2', shape=[batch_size, 2 * n_hid], dtype=tf.float32, initializer=tf.zeros_initializer())
+        #h0_2 = tflib.param(name + '.init.h0_2', np.zeros(2 * n_hid, dtype='float32'))
         h0_2 = tf.reshape(tf.tile(h0_2, tf.stack([batch_size])), tf.stack([batch_size, 2 * n_hid]))
 
-    cell1 = LSTMCell(name + '_fw', n_in, n_hid)
-    cell2 = LSTMCell(name + '_bw', n_in, n_hid)
+    #cell1 = LSTMCell(name + '_fw', n_in, n_hid)
+    #cell2 = LSTMCell(name + '_bw', n_in, n_hid)
+    cell1 = tf.contrib.rnn.LSTMCell(n_hid,state_is_tuple=False)
+    cell2 = tf.contrib.rnn.LSTMCell(n_hid,state_is_tuple=False)
 
-    seq_len = tf.tile(tf.expand_dims(tf.shape(inputs)[1], 0), [batch_size])
-    outputs = tf.nn.bidirectional_dynamic_rnn(
+    seq_len = tf.tile(tf.expand_dims(tf.shape(inputs)[1], 0), [batch_size]) #?
+    outputs = tf.nn.bidirectional_dynamic_rnn(#tansfor 'inputs'?
         cell1, cell2, inputs, sequence_length=seq_len, initial_state_fw=h0_1, initial_state_bw=h0_2, swap_memory=True)
     return tf.concat([outputs[0][0], outputs[0][1]], 2)
 
@@ -358,7 +362,7 @@ ctx_vector = []
 
 
 class im2latexAttentionCell(tf.nn.rnn_cell.RNNCell):
-
+                    #  name, input_dim, DEC_DIM, H * W, 2 * ENC_DIM, V_t
     def __init__(self, name, n_in, n_hid, L, D, ctx, forget_bias=1.0):
         self._n_in = n_in
         self._n_hid = n_hid
@@ -428,7 +432,7 @@ class im2latexAttentionCell(tf.nn.rnn_cell.RNNCell):
         return output_t, new_state
 
 
-def im2latexAttention(name, inputs, ctx, input_dim, ENC_DIM, DEC_DIM, D, H, W):
+def im2latexAttention(name, embedding, ctx, input_dim, ENC_DIM, DEC_DIM, D, H, W):
     """
     Function that encodes the feature grid extracted from CNN using BiLSTM encoder
     and decodes target sequences using an attentional decoder mechanism
@@ -436,7 +440,7 @@ def im2latexAttention(name, inputs, ctx, input_dim, ENC_DIM, DEC_DIM, D, H, W):
     PS: Feature grid can be of variable size (as long as size is within 'H' and 'W')
 
     :parameters:
-        ctx - (N,C,H,W) format ; feature grid extracted from CNN
+        ctx - (N,H,W,C) format ; feature grid extracted from CNN
         input_dim - int ; Dimensionality of input sequences (Usually, Embedding Dimension)
         ENC_DIM - int; Dimensionality of BiLSTM Encoder
         DEC_DIM - int; Dimensionality of Attentional Decoder
@@ -445,36 +449,46 @@ def im2latexAttention(name, inputs, ctx, input_dim, ENC_DIM, DEC_DIM, D, H, W):
         W - int; Maximum width of feature grid
     """
 
-    V = tf.transpose(ctx, [0, 2, 3, 1])  # (B, H, W, D)
+    #V = tf.transpose(ctx, [0, 2, 3, 1])  # (B, H, W, D)
+    #V = tf.transpose(ctx, [3, 2, 0, 1])  # (B, H, W, D)
+    V = ctx
     V_cap = []
-    batch_size = tf.shape(ctx)[0]
-    count = 0
+    batch_size = tf.shape(ctx)[0] #batch size = N
+    #count = 0
 
     h0_i_1 = tf.tile(
-        tflib.param(name + '.Enc_.init.h0_1', np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
+        tf.get_variable(name + '.Enc_.init.h0_1', initializer=np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
+        #tflib.param(name + '.Enc_.init.h0_1', np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
 
     h0_i_2 = tf.tile(
-        tflib.param(name + '.Enc_init.h0_2', np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
+        tf.get_variable(name + '.Enc_init.h0_2', initializer=np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
+        #tflib.param(name + '.Enc_init.h0_2', np.zeros((1, H, 2 * ENC_DIM)).astype('float32')), [batch_size, 1, 1])
 
-    def fn(prev_out, i):
+
+    def fn(prev_out, i):# < ---- 
         # for i in xrange(H):
         return tflib.ops.BiLSTM(name + '.BiLSTMEncoder', V[:, i], D, ENC_DIM, h0_i_1[:, i], h0_i_2[:, i])
 
     V_cap = tf.scan(
         fn, tf.range(tf.shape(V)[1]), initializer=tf.placeholder(shape=(None, None, 2 * ENC_DIM), dtype=tf.float32))
 
-    V_t = tf.reshape(tf.transpose(V_cap, [1, 0, 2, 3]), [tf.shape(inputs)[0], -1, ENC_DIM * 2])  # (B, L, ENC_DIM)
+
+    #V_t = tf.reshape(tf.transpose(V_cap, [1, 0, 2, 3]), [tf.shape(embedding)[0], -1, ENC_DIM * 2])  # (B, L, ENC_DIM)
+    V_t = tf.reshape(V_cap, [tf.shape(embedding)[0], -1, ENC_DIM * 2])  # (B, L, ENC_DIM)
 
     h0_dec = tf.tile(
         tflib.param(name + '.Decoder.init.h0', np.zeros((1, 3 * DEC_DIM)).astype('float32')), [batch_size, 1])
 
     cell = tflib.ops.im2latexAttentionCell(name + '.AttentionCell', input_dim, DEC_DIM, H * W, 2 * ENC_DIM, V_t)
-    seq_len = tf.tile(tf.expand_dims(tf.shape(inputs)[1], 0), [batch_size])
-    out = tf.nn.dynamic_rnn(cell, inputs, initial_state=h0_dec, sequence_length=seq_len, swap_memory=True)
+    #cell = tf.contrib.rnn.LSTMCell(H * W, 2 * ENC_DIM,state_is_tuple=False)
+    seq_len = tf.tile(tf.expand_dims(tf.shape(embedding)[1], 0), [batch_size])
+    import ipdb; ipdb.set_trace()
+    #embedding
+    out = tf.nn.dynamic_rnn(cell, embedding, initial_state=h0_dec, sequence_length=seq_len, swap_memory=True)
 
     return out
 
-
+"""
 class FreeRunIm2LatexAttentionCell(tf.nn.rnn_cell.RNNCell):
 
     def __init__(self, name, n_in, n_out, n_hid, L, D, ctx, forget_bias=1.0):
@@ -538,21 +552,6 @@ class FreeRunIm2LatexAttentionCell(tf.nn.rnn_cell.RNNCell):
 
 
 def FreeRunIm2LatexAttention(name, ctx, input_dim, output_dim, ENC_DIM, DEC_DIM, D, H, W):
-    """
-    Function that encodes the feature grid extracted from CNN using BiLSTM encoder
-    and decodes target sequences using an attentional decoder mechanism
-
-    PS: Feature grid can be of variable size (as long as size is within 'H' and 'W')
-
-    :parameters:
-        ctx - (N,C,H,W) format ; feature grid extracted from CNN
-        input_dim - int ; Dimensionality of input sequences (Usually, Embedding Dimension)
-        ENC_DIM - int; Dimensionality of BiLSTM Encoder
-        DEC_DIM - int; Dimensionality of Attentional Decoder
-        D - int; No. of channels in feature grid
-        H - int; Maximum height of feature grid
-        W - int; Maximum width of feature grid
-    """
 
     V = tf.transpose(ctx, [0, 2, 3, 1])  # (B, H, W, D)
     V_cap = []
@@ -586,3 +585,4 @@ def FreeRunIm2LatexAttention(name, ctx, input_dim, output_dim, ENC_DIM, DEC_DIM,
     seq_len = tf.tile(tf.expand_dims(160, 0), [batch_size])
     out = tf.nn.dynamic_rnn(cell, inputs, initial_state=h0_dec, sequence_length=seq_len, swap_memory=True)
     return out
+"""

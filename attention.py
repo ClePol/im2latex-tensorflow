@@ -27,7 +27,7 @@ W = 50
 #     X,seqs,mask,reset = custom_runner.get_inputs()
 #
 # print X,seqs
-X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32)
+X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32) #NHWC
 mask = tf.placeholder(shape=(None, None), dtype=tf.int32)
 seqs = tf.placeholder(shape=(None, None), dtype=tf.int32)
 learn_rate = tf.placeholder(tf.float32)
@@ -35,7 +35,7 @@ input_seqs = seqs[:, :-1]
 target_seqs = seqs[:, 1:]
 emb_seqs = tflib.ops.Embedding('Embedding', V, EMB_DIM, input_seqs)
 
-ctx = tflib.network.im2latex_cnn(X, NUM_FEATS_START, True)
+ctx = tflib.network.im2latex_cnn(X, NUM_FEATS_START, True) #ctx in 'NHWC'
 out, state = tflib.ops.im2latexAttention('AttLSTM', emb_seqs, ctx, EMB_DIM, ENC_DIM, DEC_DIM, D, H, W)
 logits = tflib.ops.Linear('MLP.1', out, DEC_DIM, V)
 predictions = tf.argmax(tf.nn.softmax(logits[:, -1]), axis=1)
