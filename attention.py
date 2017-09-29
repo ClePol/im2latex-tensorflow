@@ -22,11 +22,7 @@ H = 20
 W = 50
 
 
-# with tf.device("/cpu:0"):                         deprecated
-#     custom_runner = data_loaders.CustomRunner()
-#     X,seqs,mask,reset = custom_runner.get_inputs()
-#
-# print X,seqs
+
 X = tf.placeholder(shape=(None, None, None, 1), dtype=tf.float32) #NHWC
 mask = tf.placeholder(shape=(None, None), dtype=tf.int32)
 seqs = tf.placeholder(shape=(None, None), dtype=tf.int32)
@@ -137,10 +133,7 @@ init = tf.global_variables_initializer()
 sess.run(init)
 saver = tf.train.Saver()
 #saver.restore(sess, './weights_best.ckpt')
-## start the tensorflow QueueRunner's
-# tf.train.start_queue_runners(sess=sess)
-## start ou3r custom queue runner's threads
-# custom_runner.start_threads(sess)
+
 
 losses = []
 times = []
@@ -183,7 +176,7 @@ for i in xrange(i, NB_EPOCHS):
     val_loss, val_perp = score('valid', BATCH_SIZE)
     if val_perp < best_perp:
         best_perp = val_perp
-        # saver.save(sess,"weights_best.ckpt")
+        saver.save(sess,"weights_best.ckpt")
         print "\tBest Perplexity Till Now! Saving state!"
     else:
         lr = lr * 0.5

@@ -1,3 +1,4 @@
+"""
 import numpy as np
 import tensorflow as tf
 
@@ -7,7 +8,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 _params = {}
 def param(name, *args, **kwargs):
-    """
+    
     A wrapper for `tf.Variable` which enables parameter sharing in models.
 
     Creates and returns theano shared variables similarly to `tf.Variable`,
@@ -16,8 +17,8 @@ def param(name, *args, **kwargs):
     making a new one.
     This constructor also adds a `param` attribute to the shared variables it
     creates, so that you can easily search a graph for all params.
-    """
-
+    
+    
     if name not in _params:
         kwargs['name'] = name
         param = tf.Variable(*args, **kwargs)
@@ -37,3 +38,4 @@ def print_model_settings(locals_):
     all_vars = sorted(all_vars, key=lambda x: x[0])
     for var_name, var_value in all_vars:
         print "\t{}: {}".format(var_name, var_value)
+"""
